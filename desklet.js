@@ -87,7 +87,13 @@ RedditModel.prototype = {
     },
 
     setOnLoad: function(callback) {
+        this.onLoad = callback;
         this.subs.onLoad = callback;
+    },
+
+    setSubs: function(subs) {
+        this.subs = new Subreddit(this.session, subs);
+        this.subs.onLoad = this.onLoad;
     }
 }
 
@@ -168,7 +174,8 @@ RedditDesklet.prototype = {
     },
 
     _onSubredditChange: function() {
-
+        this.model.setSubs(this.subreddit);
+        this.model.refresh();
     },
 
     _onSizeChange: function() {
