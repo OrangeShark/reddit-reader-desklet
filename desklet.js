@@ -4,6 +4,9 @@ const Lang = imports.lang;
 const St = imports.gi.St;
 const Gtk = imports.gi.Gtk;
 const Soup = imports.gi.Soup;
+const Mainloop = imports.mainloop;
+
+const MIN_TO_MS = 60 * 1000;
 
 function Post(data) {
     this._init(data);
@@ -123,10 +126,15 @@ RedditDesklet.prototype = {
                     "height",
                     this._onSizeChange,
                     null);
+            this.settings.bindProperty(
+                    Settings.BindingDirection.IN,
+                    "refreshRate",
+                    "refreshRate",
+                    this._updateLoop,
+                    null);
         } catch (e) {
             global.logError(e);
         }
-
 
         this.model = new RedditModel(this.subreddit);
         this.model.setOnLoad(Lang.bind(this, this._onSizeChange));
@@ -166,6 +174,18 @@ RedditDesklet.prototype = {
     _onSizeChange: function() {
         this._redditBox.destroy();
         this.draw();
+    },
+
+    _updateLoop: function() {
+        if(this.update_id) {
+            Mainloop.source_remove(this.update_id);
+            this.update_id = 0;
+        }
+        this.model.refresh();
+        let timeout = this.refreshRate * MIN_TO_MS;
+        this.update_id = 
+            Mainloop.timeout_add(timeout, 
+                                 Lang.bind(this, this._updateLoop));
     }
 }
 

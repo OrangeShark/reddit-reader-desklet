@@ -20,8 +20,18 @@
         "type": "spinbutton",
         "min": 100,
         "max": 1000,
+        "step": 50,
         "description": "Width:",
-        "units": "pixels",
-        "step": 50
+        "units": "pixels"
+    },
+
+    "refreshRate": {
+        "default": 5,
+        "type": "spinbutton",
+        "min": 1,
+        "max": 60,
+        "step": 1,
+        "description": "Refresh rate:",
+        "units": "minutes"
     }
 }
