@@ -58,6 +58,9 @@ Subreddit.prototype = {
             this.posts =
                 resultPosts.map(function(c) { return new Post(c.data); });
         }
+        if(this.onLoad) {
+            this.onLoad();
+        }
     }
 
 }
@@ -78,6 +81,10 @@ RedditModel.prototype = {
 
     refresh: function() {
         this.subs.get();
+    },
+
+    setOnLoad: function(callback) {
+        this.subs.onLoad = callback;
     }
 }
 
@@ -122,6 +129,7 @@ RedditDesklet.prototype = {
 
 
         this.model = new RedditModel(this.subreddit);
+        this.model.setOnLoad(Lang.bind(this, this._onSizeChange));
         this.model.refresh();
         this.draw();
     },
