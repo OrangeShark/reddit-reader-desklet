@@ -141,14 +141,14 @@ RedditDesklet.prototype = {
         } catch (e) {
             global.logError(e);
         }
-
+        
+        this.setupUI();
         this.model = new RedditModel(this.subreddit);
-        this.model.setOnLoad(Lang.bind(this, this._onSizeChange));
+        this.model.setOnLoad(Lang.bind(this, this.draw));
         this.model.refresh();
-        this.draw();
     },
-
-    draw: function() {
+    
+    setupUI: function() {
         this._redditBox = new St.BoxLayout({vertical: true,
                                             width: this.width,
                                             height: this.height,
@@ -161,6 +161,12 @@ RedditDesklet.prototype = {
         this._redditBox.add(this._view, { expand: true });
         this._view.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC);
 
+    },
+
+    draw: function() {
+        if(this._postBox) {
+            this._postBox.destroy();
+        }
         this._postBox = new St.BoxLayout({ vertical: true });
         this._view.add_actor(this._postBox);
 
@@ -180,6 +186,7 @@ RedditDesklet.prototype = {
 
     _onSizeChange: function() {
         this._redditBox.destroy();
+        this.setupUI();
         this.draw();
     },
 
