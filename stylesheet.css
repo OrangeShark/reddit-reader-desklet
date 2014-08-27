@@ -7,17 +7,27 @@
 
 .reddit-title-bar {
   background-color: #cee3f8;
+  padding: 5px 2px;
+  font-size: 1.5em;
+}
+
+.reddit-header-icon {
+  icon-size: 1em;
+}
+
+.reddit-title {
+
+}
+
+.reddit-subtitle {
+  padding-left: 10px;
 }
 
 .reddit-posts-box {
-  padding: 5px;
+
 }
 
 .reddit-post {
   padding: 5px;
   color: #336699;
-}
-
-.reddit-header-icon {
-  icon-size: 1.5em;
 }
