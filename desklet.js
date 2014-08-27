@@ -5,6 +5,7 @@ const St = imports.gi.St;
 const Gtk = imports.gi.Gtk;
 const Soup = imports.gi.Soup;
 const Mainloop = imports.mainloop;
+const Util = imports.misc.util;
 
 const MIN_TO_MS = 60 * 1000;
 
@@ -154,8 +155,20 @@ RedditDesklet.prototype = {
                                             height: this.height,
                                             style_class: "reddit-reader"});
         
+        let titlebar = new St.BoxLayout({vertical: false,
+                                         style_class: "reddit-title-bar"});
+        let icon = new St.Icon({
+            icon_name: "web-browser-symbolic",
+            style_class: "reddit-header-icon"});
+        let headerButton = new St.Button();
         let name = new St.Label({ text: "reddit" });
-        this._redditBox.add(name);
+        headerButton.add_actor(icon);
+        headerButton.connect("clicked", function(button, event) {
+            Util.spawnCommandLine("xdg-open http://www.reddit.com");
+        });
+        titlebar.add(headerButton);
+        titlebar.add(name);
+        this._redditBox.add(titlebar);
 
         this._view = new St.ScrollView();
         this._redditBox.add(this._view, { expand: true });
@@ -167,13 +180,20 @@ RedditDesklet.prototype = {
         if(this._postBox) {
             this._postBox.destroy();
         }
-        this._postBox = new St.BoxLayout({ vertical: true });
+        this._postBox = new St.BoxLayout({ vertical: true,
+                                           style_class: "reddit-posts-box"});
         this._view.add_actor(this._postBox);
 
         let posts = this.model.getPosts();
         for(let i = 0; i < posts.length; i++) {
+            let postButton = new St.Button({style_class: "reddit-post",
+                                            x_align: St.Align.START});
+            postButton.connect("clicked", Lang.bind(posts[i], function(b, e) {
+                Util.spawnCommandLine("xdg-open %s".format(this.url));
+            }));
             let postLabel = new St.Label({text: posts[i].title});
-            this._postBox.add(postLabel);
+            postButton.add_actor(postLabel);
+            this._postBox.add(postButton);
         }
 
         this.setContent(this._redditBox);
