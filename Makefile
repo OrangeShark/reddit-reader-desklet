@@ -10,11 +10,17 @@ UUID= reddit-reader@orangeshark
 DESKLETDIR= ~/.local/share/cinnamon/desklets/
 DESTDIR= $(DESKLETDIR)$(UUID)
 
-.PHONY: install dist
+.PHONY: install dist clean
 
 install: $(FILES)
 	mkdir -p $(DESTDIR)
 	cp $(FILES) $(DESTDIR)
 
 dist: $(FILES)
-	zip $(UUID) $(FILES)
+	mkdir -p $(UUID)
+	cp $(FILES) $(UUID)
+	zip -r $(UUID) $(UUID)
+	rm -r $(UUID)
+
+clean:
+	rm $(UUID).zip
