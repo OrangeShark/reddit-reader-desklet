@@ -3,7 +3,8 @@ FILES=										\
 		icon.png 							\
 		metadata.json 				\
 		settings-schema.json 	\
-		stylesheet.css
+		stylesheet.css				\
+		COPYING
 
 UUID= reddit-reader@orangeshark
 DESKLETDIR= ~/.local/share/cinnamon/desklets/
