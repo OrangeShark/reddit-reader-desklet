@@ -133,7 +133,6 @@ RedditDesklet.prototype = {
 
         this.metadata = metadata;
 
-        
         try {
             this.settings = new Settings.DeskletSettings(
                     this, this.metadata.uuid, this.instance_id);
@@ -160,7 +159,7 @@ RedditDesklet.prototype = {
                     Settings.BindingDirection.IN,
                     "refreshRate",
                     "refreshRate",
-                    this._updateLoop,
+                    this._onRefreshChange,
                     null);
         } catch (e) {
             global.logError(e);
@@ -169,7 +168,7 @@ RedditDesklet.prototype = {
         this.setupUI();
         this.model = new RedditModel(this.subreddit);
         this.model.setOnLoad(Lang.bind(this, this.draw));
-        this.model.refresh();
+        this._updateLoop();
     },
     
     setupUI: function() {
@@ -277,7 +276,10 @@ RedditDesklet.prototype = {
             infobox.add(authorButton);
             this._postBox.add(infobox);
         }
+    },
 
+    on_desklet_removed: function() {
+        Mainloop.source_remove(this.update_id);
     },
 
     _onSubredditChange: function() {
@@ -292,12 +294,16 @@ RedditDesklet.prototype = {
         this.draw();
     },
 
-    _updateLoop: function() {
-        // check if a timeout already exists
-        if(this.update_id) {
+    _onRefreshChange: function() {
+        if(this.update_id > 0) {
             Mainloop.source_remove(this.update_id);
-            this.update_id = 0;
         }
+        this.update_id = null;
+        this._updateLoop();
+    },
+
+    _updateLoop: function() {
+        global.log("[%s] update".format(this.metadata.uuid));
         this.model.refresh();
         let timeout = this.refreshRate * MIN_TO_MS;
         this.update_id = 
