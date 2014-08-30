@@ -25,10 +25,11 @@
 }
 
 .reddit-posts-box {
-  padding: 0;
+
 }
 
 .reddit-post {
+  color: #336699;
   padding: 5px 5 5 0;
 }
 

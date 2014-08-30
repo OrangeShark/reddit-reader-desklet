@@ -222,7 +222,7 @@ RedditDesklet.prototype = {
         if(this._postBox) {
             this._postBox.destroy();
         }
-                     
+
         this._subname.set_text(this.subreddit);
         
         this._postBox = new St.BoxLayout( { vertical: true,

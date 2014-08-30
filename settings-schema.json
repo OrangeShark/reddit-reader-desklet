@@ -2,7 +2,7 @@
     "subreddit": {
         "default": "all",
         "type": "entry",
-        "description": "Subreddit: ",
+        "description": "Subreddit:",
         "tooltip" : "supports multireddits and alterative sorting methods. eg: TheOnion+NotTheOnion, Linux/new and aww+worldnews/controversial"
     },
 
