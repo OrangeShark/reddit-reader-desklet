@@ -40,7 +40,9 @@ Post.prototype = {
         this.author = data.author;
         this.title = data.title;
         this.url = data.url;
-
+        this.num_comments = data.num_comments;
+        this.permalink = data.permalink;
+        this.score = data.score;
     }
 }
 
@@ -192,13 +194,21 @@ RedditDesklet.prototype = {
 
         let name = new St.Label({ text: "reddit",
                                   style_class: "reddit-title" });
-
+        
+        this._subButton = new St.Button()
+        
         this._subname = new St.Label( {text: "loading...",
                                        style_class: "reddit-subtitle" });
-
+                                       
+        this._subButton.add_actor(this._subname);
+        
+        this._subButton.connect("clicked", Lang.bind(this, function(button, event) {
+            Util.spawnCommandLine("xdg-open http://www.reddit.com/r/" + this.subreddit);
+        }));
+        
         titlebar.add(headerButton);
         titlebar.add(name);
-        titlebar.add(this._subname);
+        titlebar.add(this._subButton);
         this._redditBox.add(titlebar);
 
         this._view = new St.ScrollView();
@@ -212,8 +222,9 @@ RedditDesklet.prototype = {
         if(this._postBox) {
             this._postBox.destroy();
         }
-
+                     
         this._subname.set_text(this.subreddit);
+        
         this._postBox = new St.BoxLayout( { vertical: true,
                                             style_class: "reddit-posts-box"} );
         this._view.add_actor(this._postBox);
@@ -230,6 +241,41 @@ RedditDesklet.prototype = {
             let postLabel = new St.Label( {text: posts[i].title} );
             postButton.add_actor(postLabel);
             this._postBox.add(postButton);
+            // infobox
+            let infobox = new St.BoxLayout({vertical: false,
+                                         style_class: "reddit-info-box"});
+            
+            // points
+            let scoreLabel = new St.Label( {text: "1 point"} );
+            if(posts[i].score != 1) {
+                scoreLabel = new St.Label( {text: posts[i].score + " points"} );
+            }
+            infobox.add(scoreLabel);
+            // comments
+            let commentButton = new St.Button();
+            
+            commentButton.connect("clicked", Lang.bind(posts[i], function(b, e) {
+                Util.spawnCommandLine("xdg-open %s".format("https://www.reddit.com" + this.permalink));
+            }));
+
+            let commentLabel = new St.Label( {text: "1 comment"} );
+            if(posts[i].num_comments != 1) {
+                commentLabel.set_text(posts[i].num_comments + " comments");
+            }
+            commentButton.add_actor(commentLabel);
+            infobox.add(commentButton);
+            
+             // author
+            let authorButton = new St.Button();
+            
+            authorButton.connect("clicked", Lang.bind(posts[i], function(b, e) {
+                Util.spawnCommandLine("xdg-open %s".format("https://www.reddit.com/u/" + this.author));
+            }));
+
+            let authorLabel = new St.Label( {text: "posted by " + posts[i].author} );
+            authorButton.add_actor(authorLabel);
+            infobox.add(authorButton);
+            this._postBox.add(infobox);
         }
 
     },
