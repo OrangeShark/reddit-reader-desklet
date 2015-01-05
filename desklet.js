@@ -1,6 +1,6 @@
 /* Cinnamon desklet for reading reddit.com
 
-Copyright (C) 2014 Erik Edrosa
+Copyright (C) 2014, 2015 Erik Edrosa
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ const Desklet = imports.ui.desklet;
 const Settings = imports.ui.settings;
 
 const MIN_TO_MS = 60 * 1000;
+const USER_AGENT = "reddit-reader-desklet/0.3";
 
 function Post(data) {
     this._init(data);
@@ -98,7 +99,7 @@ function RedditModel(subs) {
 
 RedditModel.prototype = {
     _init: function(subs) {
-        this.session = new Soup.Session();
+        this.session = new Soup.Session({user_agent: USER_AGENT});
         this.subs = new Subreddit(this.session, subs);
     },
 
@@ -164,27 +165,27 @@ RedditDesklet.prototype = {
         } catch (e) {
             global.logError(e);
         }
-        
+
         this.setupUI();
         this.model = new RedditModel(this.subreddit);
         this.model.setOnLoad(Lang.bind(this, this.draw));
         this._updateLoop();
     },
-    
+
     setupUI: function() {
         // main container of the desklet
         this._redditBox = new St.BoxLayout( {vertical: true,
                                              width: this.width,
                                              height: this.height,
                                              style_class: "reddit-reader"} );
-        
+
         let titlebar = new St.BoxLayout({vertical: false,
                                          style_class: "reddit-title-bar"});
-        
+
         let icon = new St.Icon({
             icon_name: "web-browser-symbolic",
             style_class: "reddit-header-icon"});
-        
+
         let headerButton = new St.Button();
         headerButton.add_actor(icon);
         headerButton.connect("clicked", function(button, event) {
@@ -193,18 +194,18 @@ RedditDesklet.prototype = {
 
         let name = new St.Label({ text: "reddit",
                                   style_class: "reddit-title" });
-        
+
         this._subButton = new St.Button()
-        
+
         this._subname = new St.Label( {text: "loading...",
                                        style_class: "reddit-subtitle" });
-                                       
+
         this._subButton.add_actor(this._subname);
-        
+
         this._subButton.connect("clicked", Lang.bind(this, function(button, event) {
             Util.spawnCommandLine("xdg-open http://www.reddit.com/r/" + this.subreddit);
         }));
-        
+
         titlebar.add(headerButton);
         titlebar.add(name);
         titlebar.add(this._subButton);
@@ -213,23 +214,26 @@ RedditDesklet.prototype = {
         this._view = new St.ScrollView();
         this._view.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC);
         this._redditBox.add(this._view, { expand: true });
-        
+
         this.setContent(this._redditBox);
     },
 
     draw: function() {
-        if(this._postBox) {
-            this._postBox.destroy();
+        if(this._postsBox) {
+            this._postsBox.destroy();
         }
 
         this._subname.set_text(this.subreddit);
-        
-        this._postBox = new St.BoxLayout( { vertical: true,
+
+        this._postsBox = new St.BoxLayout( { vertical: true,
                                             style_class: "reddit-posts-box"} );
-        this._view.add_actor(this._postBox);
+        this._view.add_actor(this._postsBox);
 
         let posts = this.model.getPosts();
         for(let i = 0; i < posts.length; i++) {
+            let postBox = new St.BoxLayout( { vertical: true,
+                                              style_class: "reddit-post-box"} );
+
             // St buttons are used as containers for the clicked event
             let postButton = new St.Button({style_class: "reddit-post",
                                             x_align: St.Align.START});
@@ -239,20 +243,41 @@ RedditDesklet.prototype = {
             }));
             let postLabel = new St.Label( {text: posts[i].title} );
             postButton.add_actor(postLabel);
-            this._postBox.add(postButton);
+            postBox.add(postButton);
             // infobox
-            let infobox = new St.BoxLayout({vertical: false,
-                                         style_class: "reddit-info-box"});
-            
+            let infoBox = new St.BoxLayout({vertical: false,
+                                            style_class: "reddit-info-box"});
+
             // points
             let scoreLabel = new St.Label( {text: "1 point"} );
             if(posts[i].score != 1) {
-                scoreLabel = new St.Label( {text: posts[i].score + " points"} );
+                scoreLabel = new St.Label( {text: "%s points".format(posts[i].score)} );
             }
-            infobox.add(scoreLabel);
+            infoBox.add(scoreLabel);
+             // author
+            let authorButton = new St.Button();
+
+            authorButton.connect("clicked", Lang.bind(posts[i], function(b, e) {
+                Util.spawnCommandLine("xdg-open %s".format("https://www.reddit.com/u/" + this.author));
+            }));
+
+            let authorLabel = new St.Label( {text: "by " + posts[i].author} );
+            authorButton.add_actor(authorLabel);
+            infoBox.add(authorButton);
+
+            // subreddit
+            let subButton = new St.Button();
+            subButton.connect("clicked", Lang.bind(posts[i], function(b, e) {
+                Util.spawnCommandLine("xdg-open %s".format("https://www.reddit.com/r/" + this.subreddit));
+            }));
+
+            let subLabel = new St.Label( {text: "to " + posts[i].subreddit} );
+            subButton.add_actor(subLabel);
+            infoBox.add(subButton);
+
             // comments
             let commentButton = new St.Button();
-            
+
             commentButton.connect("clicked", Lang.bind(posts[i], function(b, e) {
                 Util.spawnCommandLine("xdg-open %s".format("https://www.reddit.com" + this.permalink));
             }));
@@ -262,19 +287,10 @@ RedditDesklet.prototype = {
                 commentLabel.set_text(posts[i].num_comments + " comments");
             }
             commentButton.add_actor(commentLabel);
-            infobox.add(commentButton);
-            
-             // author
-            let authorButton = new St.Button();
-            
-            authorButton.connect("clicked", Lang.bind(posts[i], function(b, e) {
-                Util.spawnCommandLine("xdg-open %s".format("https://www.reddit.com/u/" + this.author));
-            }));
+            infoBox.add(commentButton);
 
-            let authorLabel = new St.Label( {text: "posted by " + posts[i].author} );
-            authorButton.add_actor(authorLabel);
-            infobox.add(authorButton);
-            this._postBox.add(infobox);
+            postBox.add(infoBox);
+            this._postsBox.add(postBox);
         }
     },
 
@@ -303,11 +319,11 @@ RedditDesklet.prototype = {
     },
 
     _updateLoop: function() {
-        global.log("[%s] update".format(this.metadata.uuid));
+        //global.log("[%s] update".format(this.metadata.uuid));
         this.model.refresh();
         let timeout = this.refreshRate * MIN_TO_MS;
-        this.update_id = 
-            Mainloop.timeout_add(timeout, 
+        this.update_id =
+            Mainloop.timeout_add(timeout,
                                  Lang.bind(this, this._updateLoop));
     }
 }

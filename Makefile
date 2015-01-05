@@ -4,7 +4,8 @@ FILES=										\
 		metadata.json 				\
 		settings-schema.json 	\
 		stylesheet.css				\
-		COPYING
+		COPYING								\
+		CHANGELOG
 
 UUID= reddit-reader@orangeshark
 DESKLETDIR= ~/.local/share/cinnamon/desklets/
