@@ -26,7 +26,7 @@ const Desklet = imports.ui.desklet;
 const Settings = imports.ui.settings;
 
 const MIN_TO_MS = 60 * 1000;
-const USER_AGENT = "reddit-reader-desklet/0.3";
+const USER_AGENT = "reddit-reader-desklet/0.4";
 
 function Post(data) {
     this._init(data);
@@ -213,21 +213,20 @@ RedditDesklet.prototype = {
 
         this._view = new St.ScrollView();
         this._view.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC);
+
+        this._postsBox = new St.BoxLayout( { vertical: true,
+                                            style_class: "reddit-posts-box"} );
+        this._view.add_actor(this._postsBox);
+
         this._redditBox.add(this._view, { expand: true });
 
         this.setContent(this._redditBox);
     },
 
     draw: function() {
-        if(this._postsBox) {
-            this._postsBox.destroy();
-        }
+        this._postsBox.destroy_all_children();
 
         this._subname.set_text(this.subreddit);
-
-        this._postsBox = new St.BoxLayout( { vertical: true,
-                                            style_class: "reddit-posts-box"} );
-        this._view.add_actor(this._postsBox);
 
         let posts = this.model.getPosts();
         for(let i = 0; i < posts.length; i++) {
