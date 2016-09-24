@@ -55,44 +55,41 @@ Subreddit.prototype = {
     _init: function (session, sub) {
         this.session = session;
         this.sub     = sub;
-        this.url     = "http://www.reddit.com/r/%s/.json".format(sub);
-        this.posts   = [];
+        this.urls    = [];
+
+        var self = this;
+
+        sub.split(',').forEach(function (subreddit) {
+            self.urls.push("http://www.reddit.com/r/%s/.json".format(subreddit))
+        });
+
+        this.posts = [];
     },
 
     get: function () {
-        let message = Soup.Message.new("GET", this.url);
 
-        this.session.queue_message(message, Lang.bind(this, this._onResponse));
+        for (var i = 0; i < this.urls.length; i++) {
+            let message = Soup.Message.new("GET", this.urls[i]);
+            this.session.queue_message(message, Lang.bind(this, this._onResponse));
+        }
     },
 
     _onResponse: function (session, message) {
         if (message.status_code != 200) {
-            this._processResponse(message.status_code, null);
-        } else {
-            let resultJSON = message.response_body.data;
-            let result     = JSON.parse(resultJSON);
-            this._processResponse(null, result);
+            global.logError("reddit-reader: Recieved a %d".format(message.status_code));
+            return;
         }
-    },
 
-    _processResponse: function (error, result) {
-        if (error !== null) {
-            this.posts = [];
-            global.logError("reddit-reader: Recieved a %d from %s".format(
-                error, this.url));
-        } else {
-            let resultPosts = result.data.children;
-            this.posts      =
-                resultPosts.map(function (c) {
-                    return new Post(c.data);
-                });
-        }
+        let response = JSON.parse(message.response_body.data);
+
+        this.posts = response.data.children.map(function (c) {
+            return new Post(c.data);
+        });
 
         if (this.onLoad) {
             this.onLoad();
         }
-    }
-
+    },
 };
 
 function RedditModel(subs) {
@@ -136,6 +133,14 @@ RedditDesklet.prototype = {
 
         this.metadata = metadata;
 
+        this.setupSettings();
+        this.setupUI();
+        this.model = new RedditModel(this.subreddit);
+        this.model.setOnLoad(Lang.bind(this, this.draw));
+        this._updateLoop();
+    },
+
+    setupSettings: function () {
         try {
             this.settings = new Settings.DeskletSettings(
                 this, this.metadata.uuid, this.instance_id);
@@ -171,11 +176,6 @@ RedditDesklet.prototype = {
         } catch (e) {
             global.logError(e);
         }
-
-        this.setupUI();
-        this.model = new RedditModel(this.subreddit);
-        this.model.setOnLoad(Lang.bind(this, this.draw));
-        this._updateLoop();
     },
 
     setupUI: function () {
@@ -247,6 +247,10 @@ RedditDesklet.prototype = {
 
         let posts = this.model.getPosts();
 
+        posts.sort(function (a, b) {
+            return b.score - a.score;
+        });
+
         for (let i = 0; i < posts.length; i++) {
 
             let postBox = new St.BoxLayout({
@@ -278,7 +282,7 @@ RedditDesklet.prototype = {
             // points
             let scoreLabel = new St.Label({text: "1 point"});
             if (posts[i].score != 1) {
-                scoreLabel = new St.Label({text: ("%s " + posts[i].score > 1 ? 'points' : 'point' ).format(posts[i].score)});
+                scoreLabel = new St.Label({text: "%s %s".format(posts[i].score, posts[i].score > 1 ? 'points' : 'point')});
             }
             infoBox.add(scoreLabel);
 
