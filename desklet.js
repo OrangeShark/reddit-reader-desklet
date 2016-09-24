@@ -26,7 +26,7 @@ const Desklet  = imports.ui.desklet;
 const Settings = imports.ui.settings;
 
 const MIN_TO_MS  = 60 * 1000;
-const USER_AGENT = "reddit-reader-desklet/0.4";
+const USER_AGENT = "reddit-reader-desklet/0.5";
 
 function Post(data) {
     this._init(data);
