@@ -36,7 +36,7 @@ Post.prototype = {
     _init: function(data) {
         this.id = data.id;
         this.subreddit = data.subreddit;
-        this.domain = data.domain
+        this.domain = data.domain;
         this.stickied = data.stickied;
         this.author = data.author;
         this.title = data.title;
@@ -45,7 +45,7 @@ Post.prototype = {
         this.permalink = data.permalink;
         this.score = data.score;
     }
-}
+};
 
 function Subreddit(session, sub) {
     this._init(session, sub);
@@ -91,7 +91,7 @@ Subreddit.prototype = {
         }
     }
 
-}
+};
 
 function RedditModel(subs) {
     this._init(subs);
@@ -120,7 +120,7 @@ RedditModel.prototype = {
         this.subs = new Subreddit(this.session, subs);
         this.subs.onLoad = this.onLoad;
     }
-}
+};
 
 function RedditDesklet(metadata, desklet_id) {
     this._init(metadata, desklet_id);
@@ -195,7 +195,7 @@ RedditDesklet.prototype = {
         let name = new St.Label({ text: "reddit",
                                   style_class: "reddit-title" });
 
-        this._subButton = new St.Button()
+        this._subButton = new St.Button();
 
         this._subname = new St.Label( {text: "loading...",
                                        style_class: "reddit-subtitle" });
@@ -325,7 +325,7 @@ RedditDesklet.prototype = {
             Mainloop.timeout_add(timeout,
                                  Lang.bind(this, this._updateLoop));
     }
-}
+};
 
 function main(metadata, desklet_id) {
     return new RedditDesklet(metadata, desklet_id);
